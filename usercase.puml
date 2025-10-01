@@ -1,0 +1,52 @@
+@startuml UseCases
+
+title Smart Document Management System - Use Cases
+
+left to right direction
+
+actor Employee as emp
+actor Manager as mgr
+actor Administrator as admin
+
+rectangle "Smart Document Management System" {
+    
+    usecase "Login to System" as UC1
+    usecase "Upload Document" as UC2
+    usecase "Search Documents" as UC3
+    usecase "Download Document" as UC4
+    usecase "Submit for Approval" as UC5
+    usecase "Print Document" as UC6
+    
+    usecase "Approve Document" as UC7
+    usecase "Reject Document" as UC8
+    usecase "View Reports" as UC9
+    
+    usecase "Manage Users" as UC10
+    usecase "Configure System" as UC11
+    usecase "View Audit Logs" as UC12
+}
+
+' Employee interactions
+emp --> UC1
+emp --> UC2
+emp --> UC3
+emp --> UC4
+emp --> UC5
+emp --> UC6
+
+' Manager interactions
+mgr --> UC1
+mgr --> UC2
+mgr --> UC3
+mgr --> UC4
+mgr --> UC7
+mgr --> UC8
+mgr --> UC9
+
+' Administrator interactions
+admin --> UC1
+admin --> UC10
+admin --> UC11
+admin --> UC12
+
+@enduml

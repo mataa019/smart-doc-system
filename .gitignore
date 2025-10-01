@@ -75,3 +75,5 @@ docs/api/
 # OS specific files
 Thumbs.db
 ehthumbs.db
+
+/generated/prisma

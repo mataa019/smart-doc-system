@@ -1,0 +1,137 @@
+@startuml ConceptualFramework
+
+title Smart Document Management System - Conceptual Framework
+
+skinparam class {
+    BackgroundColor LightYellow
+    BorderColor Black
+    ArrowColor Black
+}
+
+skinparam package {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+}
+
+package "Core Concepts" {
+    class User {
+        +id: string
+        +email: string
+        +role: UserRole
+        +department: Department
+        +isActive: boolean
+    }
+    
+    class Document {
+        +id: string
+        +title: string
+        +content: file
+        +version: number
+        +status: DocumentStatus
+        +metadata: Metadata
+    }
+    
+    class Department {
+        +id: string
+        +name: string
+        +hierarchy: string
+        +permissions: Permission[]
+    }
+    
+    class Workflow {
+        +id: string
+        +name: string
+        +steps: WorkflowStep[]
+        +rules: BusinessRule[]
+        +status: WorkflowStatus
+    }
+}
+
+package "Security Framework" {
+    class Authentication {
+        +login()
+        +logout()
+        +validateToken()
+        +refreshToken()
+    }
+    
+    class Authorization {
+        +checkPermission()
+        +enforceRole()
+        +validateAccess()
+    }
+    
+    class AuditTrail {
+        +logAction()
+        +trackChanges()
+        +generateReport()
+    }
+}
+
+package "Integration Framework" {
+    class EmailIntegration {
+        +sendNotification()
+        +convertEmailToDocument()
+        +processAttachments()
+    }
+    
+    class PrintIntegration {
+        +submitPrintJob()
+        +releasePrint()
+        +trackCosts()
+    }
+    
+    class SystemIntegration {
+        +syncWithLDAP()
+        +connectToExchange()
+        +manageAPIs()
+    }
+}
+
+package "Business Logic" {
+    class DocumentLifecycle {
+        +create()
+        +review()
+        +approve()
+        +publish()
+        +archive()
+    }
+    
+    class WorkflowManagement {
+        +initiateWorkflow()
+        +processTask()
+        +escalateTask()
+        +completeWorkflow()
+    }
+    
+    class NotificationSystem {
+        +sendEmail()
+        +createAlert()
+        +scheduleReminder()
+    }
+}
+
+' Relationships
+User ||--o{ Document : creates/owns
+User }o--|| Department : belongs to
+Document ||--o{ Workflow : triggers
+Workflow ||--o{ WorkflowManagement : managed by
+
+User --> Authentication : authenticates
+User --> Authorization : authorized by
+Document --> DocumentLifecycle : follows
+Workflow --> WorkflowManagement : executed by
+
+DocumentLifecycle --> NotificationSystem : triggers
+WorkflowManagement --> EmailIntegration : uses
+WorkflowManagement --> NotificationSystem : uses
+
+Authentication --> AuditTrail : logs
+Authorization --> AuditTrail : logs
+DocumentLifecycle --> AuditTrail : logs
+
+PrintIntegration --> Document : prints
+EmailIntegration --> Document : converts
+SystemIntegration --> User : syncs
+
+@enduml

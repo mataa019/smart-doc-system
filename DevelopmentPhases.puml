@@ -1,0 +1,55 @@
+@startuml DevelopmentPhases
+
+title Software Development Methodology - Project Phases
+
+skinparam activity {
+    BackgroundColor LightBlue
+    BorderColor Black
+    FontSize 12
+}
+
+skinparam arrow {
+    Color Black
+    FontSize 10
+}
+
+start
+
+:Analysis
+----
+• Requirements gathering
+• Stakeholder interviews
+• System specifications
+• Feasibility study;
+
+:Design
+----
+• System architecture
+• Database design
+• UI/UX mockups
+• Technical specifications;
+
+:Implementation
+----
+• Code development
+• Component integration
+• API development
+• Database setup;
+
+:Testing
+----
+• Unit testing
+• Integration testing
+• User acceptance testing
+• Security testing;
+
+:Deployment
+----
+• Production setup
+• System configuration
+• User training
+• Go-live support;
+
+stop
+
+@enduml

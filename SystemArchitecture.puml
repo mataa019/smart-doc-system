@@ -1,0 +1,40 @@
+@startuml SmartDocumentSystemArchitecture
+
+title Smart Document Management System - Three-Tier Architecture
+
+skinparam rectangle {
+    BackgroundColor LightBlue
+    BorderColor Black
+}
+
+rectangle "PRESENTATION LAYER" as PL {
+    [Employee Portal]
+    [Manager Dashboard] 
+    [Admin Console]
+    [Mobile Interface]
+}
+
+rectangle "BUSINESS LOGIC LAYER" as BL {
+    [Authentication Service]
+    [Document Management]
+    [Workflow Engine]
+    [Print Management]
+    [Outlook Integration]
+}
+
+rectangle "DATA LAYER" as DL {
+    database "User Database"
+    database "Document Storage"
+    database "System Logs"
+}
+
+rectangle "EXTERNAL SYSTEMS" as EX {
+    [Microsoft Outlook]
+    [Network Printers]
+}
+
+PL --> BL
+BL --> DL
+BL --> EX
+
+@enduml

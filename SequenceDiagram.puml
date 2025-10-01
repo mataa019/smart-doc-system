@@ -1,0 +1,43 @@
+@startuml SequenceDiagram
+
+title Document Upload and Approval - Sequence Diagram
+
+actor Employee as emp
+participant "Web Portal" as web
+participant "API Gateway" as api
+participant "Auth Service" as auth
+participant "Document Service" as doc
+participant "Workflow Service" as workflow
+participant "User Database" as db
+participant "File Storage" as storage
+actor Manager as mgr
+
+emp -> web: Upload document
+web -> api: POST /documents
+api -> auth: Validate token
+auth -> db: Check user permissions
+db -> auth: User authorized
+auth -> api: Token valid
+
+api -> doc: Process upload
+doc -> storage: Store file
+storage -> doc: File stored
+doc -> db: Save metadata
+db -> doc: Document saved
+
+doc -> workflow: Trigger approval
+workflow -> db: Create workflow
+workflow -> mgr: Send notification
+
+mgr -> web: Review document
+web -> api: GET /workflows/pending
+api -> workflow: Get pending items
+workflow -> mgr: Return pending list
+
+mgr -> web: Approve document
+web -> api: POST /workflows/approve
+api -> workflow: Process approval
+workflow -> db: Update status
+workflow -> emp: Send approval notification
+
+@enduml

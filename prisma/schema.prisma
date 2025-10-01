@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Core enums
+enum UserRole {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+  EXTERNAL
+}
+
+enum DocumentStatus {
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum PermissionType {
+  READ
+  WRITE
+  DELETE
+  SHARE
+  ADMIN
+}
+
+// Core Users table
+model User {
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  passwordHash          String
+  firstName             String
+  lastName              String
+  role                  UserRole  @default(EMPLOYEE)
+  phone                 String?
+  isActive              Boolean   @default(true)
+  isEmailVerified       Boolean   @default(false)
+  lastLogin             DateTime?
+  
+  // Password reset functionality
+  passwordResetToken    String?
+  passwordResetExpires  DateTime?
+  
+  // Email verification
+  emailVerificationToken String?
+  emailVerificationExpires DateTime?
+  
+  // Multi-factor authentication
+  mfaEnabled            Boolean   @default(false)
+  mfaSecret             String?   // TOTP secret
+  mfaBackupCodes        Json?     // Array of backup codes
+  
+  // Account security
+  failedLoginAttempts   Int       @default(0)
+  accountLockedUntil    DateTime?
+  lastPasswordChange    DateTime  @default(now())
+  
+  // Session management
+  refreshTokenVersion   Int       @default(0) // Increment to invalidate all tokens
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  department          Department?           @relation(fields: [departmentId], references: [id])
+  departmentId        String?
+  
+  // Core relations
+  uploadedDocuments   Document[]            @relation("DocumentUploadedBy")
+  documentPermissions DocumentPermission[]
+  grantedPermissions  DocumentPermission[]  @relation("PermissionGrantedBy")
+  comments            Comment[]
+  auditLogs           AuditLog[]
+  createdFolders      Folder[]              @relation("FolderCreatedBy")
+  managedDepartments  Department[]          @relation("DepartmentManager")
+  
+  // Authentication sessions
+  sessions            UserSession[]
+
+  @@map("users")
+}
+
+// User sessions for authentication tracking
+model UserSession {
+  id            String    @id @default(cuid())
+  sessionToken  String    @unique
+  refreshToken  String    @unique
+  deviceInfo    Json?     // Browser, OS, device fingerprint
+  ipAddress     String?
+  userAgent     String?   @db.Text
+  isActive      Boolean   @default(true)
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+  lastUsedAt    DateTime  @default(now())
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+
+  @@map("user_sessions")
+}
+
+// Departments table - simplified
+model Department {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  manager         User?     @relation("DepartmentManager", fields: [managerId], references: [id])
+  managerId       String?
+  
+  users           User[]
+  documents       Document[]
+  folders         Folder[]
+  documentPermissions DocumentPermission[]
+
+  @@map("departments")
+}
+
+// Folders table - simplified hierarchical structure
+model Folder {
+  id              String    @id @default(cuid())
+  name            String
+  description     String?
+  path            String    // Materialized path for efficient queries
+  level           Int       @default(0)
+  isDeleted       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  parentFolder    Folder?   @relation("FolderHierarchy", fields: [parentFolderId], references: [id])
+  parentFolderId  String?
+  childFolders    Folder[]  @relation("FolderHierarchy")
+  
+  department      Department? @relation(fields: [departmentId], references: [id])
+  departmentId    String?
+  
+  createdBy       User      @relation("FolderCreatedBy", fields: [createdById], references: [id])
+  createdById     String
+  
+  documents       Document[]
+
+  @@map("folders")
+}
+
+// Core Documents table
+model Document {
+  id                  String          @id @default(cuid())
+  title               String
+  description         String?
+  originalFilename    String
+  storedFilename      String
+  filePath            String
+  fileSize            BigInt
+  mimeType            String
+  fileExtension       String
+  version             Int             @default(1)
+  status              DocumentStatus  @default(ACTIVE)
+  checksum            String?
+  metadata            Json?           // Flexible metadata storage (includes tags, etc.)
+  isDeleted           Boolean         @default(false)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  // Relations
+  folder              Folder?         @relation(fields: [folderId], references: [id])
+  folderId            String?
+  
+  uploadedBy          User            @relation("DocumentUploadedBy", fields: [uploadedById], references: [id])
+  uploadedById        String
+  
+  department          Department?     @relation(fields: [departmentId], references: [id])
+  departmentId        String?
+  
+  // Versioning - simplified
+  parentDocument      Document?       @relation("DocumentVersions", fields: [parentDocumentId], references: [id])
+  parentDocumentId    String?
+  childVersions       Document[]      @relation("DocumentVersions")
+  
+  // Core relations
+  permissions         DocumentPermission[]
+  comments            Comment[]
+  auditLogs           AuditLog[]
+
+  @@map("documents")
+}
+
+// Simplified permissions table
+model DocumentPermission {
+  id              String          @id @default(cuid())
+  permissionType  PermissionType
+  expiresAt       DateTime?
+  createdAt       DateTime        @default(now())
+
+  // Relations
+  document        Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId      String
+  
+  user            User?           @relation(fields: [userId], references: [id])
+  userId          String?
+  
+  department      Department?     @relation(fields: [departmentId], references: [id])
+  departmentId    String?
+  
+  grantedBy       User            @relation("PermissionGrantedBy", fields: [grantedById], references: [id])
+  grantedById     String
+
+  @@map("document_permissions")
+}
+
+// Basic comments for collaboration
+model Comment {
+  id                String    @id @default(cuid())
+  content           String    @db.Text
+  isDeleted         Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  document          Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId        String
+  
+  user              User      @relation(fields: [userId], references: [id])
+  userId            String
+  
+  // Simple reply threading
+  parentComment     Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  parentCommentId   String?
+  replies           Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+// Essential audit logging
+model AuditLog {
+  id          String    @id @default(cuid())
+  action      String    // 'create', 'read', 'update', 'delete', 'share', 'download'
+  details     Json?     // Additional context about the action
+  ipAddress   String?
+  userAgent   String?   @db.Text
+  createdAt   DateTime  @default(now())
+
+  // Relations
+  user        User?     @relation(fields: [userId], references: [id])
+  userId      String?
+  
+  document    Document? @relation(fields: [documentId], references: [id])
+  documentId  String?
+
+  @@map("audit_logs")
+}

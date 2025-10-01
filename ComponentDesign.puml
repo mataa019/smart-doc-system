@@ -1,0 +1,41 @@
+@startuml ComponentDesign
+
+title Smart Document Management System - Component Design
+
+skinparam component {
+    BackgroundColor LightBlue
+    BorderColor Black
+}
+
+[Web Portal] as WP
+[API Gateway] as AG
+
+[Auth Service] as AS
+[Document Service] as DS
+[Workflow Service] as WS
+[Print Service] as PS
+
+[User Database] as UD
+[Document Database] as DD
+[File Storage] as FS
+
+[Outlook] as OUT
+[Printers] as PR
+
+WP --> AG
+
+AG --> AS
+AG --> DS
+AG --> WS
+AG --> PS
+
+AS --> UD
+DS --> DD
+DS --> FS
+WS --> DD
+PS --> UD
+
+WS --> OUT
+PS --> PR
+
+@enduml

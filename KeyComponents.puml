@@ -1,0 +1,36 @@
+@startuml KeyComponents
+
+title Smart Document Management System - Key Components
+
+skinparam component {
+    BackgroundColor LightBlue
+    BorderColor Black
+}
+
+skinparam database {
+    BackgroundColor LightYellow
+    BorderColor Black
+}
+
+[User Management] as UM
+[Document Management] as DM
+[Workflow Engine] as WE
+[Print Service] as PS
+[Email Integration] as EI
+
+database "Users" as UD
+database "Documents" as DD
+database "Workflows" as WD
+database "Print Jobs" as PD
+
+UM --> UD
+DM --> DD
+WE --> WD
+PS --> PD
+
+UM --> DM : authenticate
+DM --> WE : trigger workflow
+WE --> EI : send notifications
+DM --> PS : print documents
+
+@enduml
