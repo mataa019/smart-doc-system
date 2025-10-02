@@ -248,15 +248,5 @@ export class AuthService {
     console.log(`Reset email: ${email}, token: ${token}`);
     // TODO: Implement Outlook integration
 
-    await this.mailService.sendMail({
-      to: email,
-      subject: 'Password Reset',
-      template: 'reset-password',
-      context: {
-        name,
-        token,
-      },
-    });
-
   }
 }
